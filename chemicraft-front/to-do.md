@@ -56,14 +56,14 @@ Desenvolver uma aplicação educacional de química com as seguintes funcionalid
 ## 4. Tarefas de Implementação
 
 ### 4.1 Configuração Inicial
-- [ ] Configurar estrutura base do projeto Next.js com TypeScript
-- [ ] Instalar e configurar Tailwind CSS para estilização
+- [x] Configurar estrutura base do projeto Next.js com TypeScript
+- [x] Instalar e configurar Tailwind CSS para estilização
 - [ ] Adicionar Capacitor para empacotamento mobile
-- [ ] Configurar ESLint e Prettier para padronização
+- [x] Configurar ESLint e Prettier para padronização
 
 ### 4.2 Dados e Lógica Base
 - [x] Criar arquivo `atomData.ts` com elementos químicos básicos (H, C, N, O, S, P)
-- [ ] Implementar `moleculeUtils.ts` com funções de cálculo de distância e proximidade
+- [x] Implementar `moleculeUtils.ts` com funções de cálculo de distância e proximidade
 - [x] Desenvolver `bondingRules.ts` com regras de valência e ligação
 
 ### 4.3 Sistema de Estado
@@ -74,18 +74,18 @@ Desenvolver uma aplicação educacional de química com as seguintes funcionalid
   - [ ] Função de reset/limpeza
 
 ### 4.4 Componentes de Interface
-- [ ] Desenvolver `AtomSelector.tsx`:
-  - [ ] Layout responsivo com elementos químicos
-  - [ ] Funcionalidade de drag iniciado
-  - [ ] Visual feedback durante arrastar
+- [x] Desenvolver `AtomSelector.tsx`:
+  - [x] Layout responsivo com elementos químicos
+  - [x] Funcionalidade de drag iniciado
+  - [x] Visual feedback durante arrastar
 - [ ] Criar `MoleculeCanvas.tsx`:
   - [ ] Área de drop funcional
   - [ ] Posicionamento de átomos
   - [ ] Detecção de proximidade para ligações
-- [ ] Implementar `Atom.tsx`:
-  - [ ] Representação visual (círculo colorido + símbolo)
-  - [ ] Estados visuais (normal, selecionado, conectado)
-  - [ ] Informações de valência disponível
+- [x] Implementar `Atom.tsx`:
+  - [x] Representação visual (círculo colorido + símbolo)
+  - [x] Estados visuais (normal, selecionado, conectado)
+  - [x] Informações de valência disponível
 
 ### 4.5 Sistema de Ligações
 - [ ] Implementar detecção automática de proximidade entre átomos
