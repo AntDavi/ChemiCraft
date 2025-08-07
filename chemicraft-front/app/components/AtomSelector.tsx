@@ -1,88 +1,59 @@
-"use client";
+'use client'
 
-import React from 'react';
-import { Dock, DockIcon } from './ui/dock';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { ATOM_LIST, getAtomData, type AtomData } from '@/lib/atomData';
-import { cn } from '@/libs/utils';
-import Atom from './Atom';
+import React from 'react'
+import { Dock, DockIcon } from './ui/dock'
+import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip'
+import { ATOM_LIST, getAtomData } from '@/lib/atomData'
+import Atom from './Atom'
 
-interface AtomSelectorProps {
-    onAtomSelect?: (atomSymbol: string) => void;
-    className?: string;
-}
-
-interface AtomIconProps {
-    atomData: AtomData;
-    onSelect?: (symbol: string) => void;
-}
-
-const AtomIcon: React.FC<AtomIconProps> = ({ atomData, onSelect }) => {
-    const handleClick = () => {
-        onSelect?.(atomData.symbol);
-    };
-
-    const handleDragStart = (e: React.DragEvent) => {
-        e.dataTransfer.setData('atom-symbol', atomData.symbol);
+function AtomSelector() {
+    const handleAtomDragStart = (e: React.DragEvent, atomSymbol: string) => {
+        e.dataTransfer.setData('atom-symbol', atomSymbol);
         e.dataTransfer.effectAllowed = 'copy';
     };
 
     return (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <DockIcon className="p-0">
-                    <Atom
-                        atomData={atomData}
-                        size={45}
-                        draggable
-                        onClick={handleClick}
-                        onDragStart={handleDragStart}
-                        className="border-gray-300 dark:border-gray-600"
-                    />
-                </DockIcon>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="bg-gray-900 text-white border border-gray-700">
-                <div className="text-center space-y-1">
-                    <div className="font-semibold text-sm">{atomData.name}</div>
-                    <div className="text-xs opacity-90">
-                        <div>Símbolo: {atomData.symbol}</div>
-                        <div>Número Atômico: {atomData.atomicNumber}</div>
-                        <div>Valência: {atomData.valence}</div>
-                    </div>
-                </div>
-            </TooltipContent>
-        </Tooltip>
-    );
-};
-
-const AtomSelector: React.FC<AtomSelectorProps> = ({
-    onAtomSelect,
-    className
-}) => {
-    return (
-        <div className={cn("flex justify-center w-full", className)}>
-            <Dock
-                iconSize={50}
-                iconMagnification={70}
-                iconDistance={120}
-                direction="middle"
-                className="bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-black/30"
-            >
+        <div className="absolute bottom-8 left-0 w-full h-24 z-10">
+            <Dock direction='middle' className="px-8 py-3 h-full gap-3">
                 {ATOM_LIST.map((atomSymbol) => {
                     const atomData = getAtomData(atomSymbol);
                     if (!atomData) return null;
 
                     return (
-                        <AtomIcon
-                            key={atomSymbol}
-                            atomData={atomData}
-                            onSelect={onAtomSelect}
-                        />
+                        <DockIcon key={atomSymbol} className=''>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div>
+                                        <Atom
+                                            atomData={atomData}
+                                            size={48}
+                                            draggable={true}
+                                            onDragStart={(e) => handleAtomDragStart(e, atomSymbol)}
+                                            className="shadow-lg hover:shadow-xl"
+                                        />
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="bg-gray-900 text-white border border-gray-700">
+                                    <div className="text-center">
+                                        <div className="font-semibold text-sm">{atomData.name}</div>
+                                        <div className="text-xs text-gray-300">
+                                            Símbolo: {atomData.symbol}
+                                        </div>
+                                        <div className="text-xs text-gray-300">
+                                            Valência: {atomData.valence}
+                                        </div>
+                                        <div className="text-xs text-gray-300">
+                                            Número Atômico: {atomData.atomicNumber}
+                                        </div>
+                                    </div>
+                                </TooltipContent>
+                            </Tooltip>
+                        </DockIcon>
                     );
                 })}
             </Dock>
         </div>
-    );
-};
+    )
+}
 
-export default AtomSelector;
+export default AtomSelector

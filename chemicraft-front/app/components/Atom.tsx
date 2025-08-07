@@ -57,18 +57,26 @@ const Atom: React.FC<AtomProps> = ({
         backgroundColor: atomData.color,
         borderColor: getBorderColor(atomData.color),
         color: getTextColor(atomData.color),
+        minWidth: size,
+        minHeight: size,
+        maxWidth: size,
+        maxHeight: size,
         ...style,
     };
 
     return (
         <div
             className={cn(
-                "flex items-center justify-center rounded-full border-2 cursor-pointer",
+                "flex items-center justify-center border-2 cursor-pointer",
                 "transition-all duration-200 select-none font-bold",
                 "hover:scale-110 active:scale-95",
                 className
             )}
-            style={atomStyle}
+            style={{
+                ...atomStyle,
+                borderRadius: '50%',
+                aspectRatio: '1 / 1',
+            }}
             onClick={handleClick}
             onDragStart={handleDragStart}
             draggable={draggable}

@@ -67,21 +67,21 @@ Desenvolver uma aplicação educacional de química com as seguintes funcionalid
 - [x] Desenvolver `bondingRules.ts` com regras de valência e ligação
 
 ### 4.3 Sistema de Estado
-- [ ] Implementar hook `useMoleculeBuilder` para:
-  - [ ] Gerenciar posições dos átomos no canvas
-  - [ ] Controlar ligações entre átomos
-  - [ ] Calcular fórmula molecular resultante
-  - [ ] Função de reset/limpeza
+- [x] Implementar hook `useMoleculeBuilder` para:
+  - [x] Gerenciar posições dos átomos no canvas
+  - [x] Controlar ligações entre átomos
+  - [x] Calcular fórmula molecular resultante
+  - [x] Função de reset/limpeza
 
 ### 4.4 Componentes de Interface
 - [x] Desenvolver `AtomSelector.tsx`:
   - [x] Layout responsivo com elementos químicos
   - [x] Funcionalidade de drag iniciado
   - [x] Visual feedback durante arrastar
-- [ ] Criar `MoleculeCanvas.tsx`:
-  - [ ] Área de drop funcional
-  - [ ] Posicionamento de átomos
-  - [ ] Detecção de proximidade para ligações
+- [x] Criar `MoleculeCanvas.tsx`:
+  - [x] Área de drop funcional
+  - [x] Posicionamento de átomos
+  - [x] Detecção de proximidade para ligações
 - [x] Implementar `Atom.tsx`:
   - [x] Representação visual (círculo colorido + símbolo)
   - [x] Estados visuais (normal, selecionado, conectado)
