@@ -187,6 +187,102 @@ export const useMoleculeBuilder = () => {
         return { formula, atomCounts };
     }, [state.atoms]);
 
+    // Detectar moléculas separadas (grupos conectados de átomos)
+    const detectSeparateMolecules = useCallback((): Array<{
+        atoms: AtomInstance[],
+        formula: string,
+        atomCounts: Record<string, number>,
+        centerPosition: { x: number, y: number }
+    }> => {
+        if (state.atoms.length === 0) return [];
+
+        const visited = new Set<string>();
+        const molecules: Array<{
+            atoms: AtomInstance[],
+            formula: string,
+            atomCounts: Record<string, number>,
+            centerPosition: { x: number, y: number }
+        }> = [];
+
+        // Função para encontrar todos os átomos conectados a um átomo inicial (DFS)
+        const findConnectedAtoms = (atomId: string): AtomInstance[] => {
+            const connectedAtoms: AtomInstance[] = [];
+            const stack: string[] = [atomId];
+            const localVisited = new Set<string>();
+
+            while (stack.length > 0) {
+                const currentAtomId = stack.pop()!;
+                if (localVisited.has(currentAtomId)) continue;
+
+                localVisited.add(currentAtomId);
+                const currentAtom = state.atoms.find(a => a.id === currentAtomId);
+                if (currentAtom) {
+                    connectedAtoms.push(currentAtom);
+
+                    // Encontrar átomos conectados através de ligações
+                    const connectedBonds = state.bonds.filter(bond =>
+                        bond.atom1Id === currentAtomId || bond.atom2Id === currentAtomId
+                    );
+
+                    connectedBonds.forEach(bond => {
+                        const nextAtomId = bond.atom1Id === currentAtomId ? bond.atom2Id : bond.atom1Id;
+                        if (!localVisited.has(nextAtomId)) {
+                            stack.push(nextAtomId);
+                        }
+                    });
+                }
+            }
+
+            return connectedAtoms;
+        };
+
+        // Processar cada átomo não visitado
+        state.atoms.forEach(atom => {
+            if (!visited.has(atom.id)) {
+                const moleculeAtoms = findConnectedAtoms(atom.id);
+
+                // Marcar todos os átomos desta molécula como visitados
+                moleculeAtoms.forEach(a => visited.add(a.id));
+
+                // Calcular fórmula para esta molécula
+                const atomCounts: Record<string, number> = {};
+                moleculeAtoms.forEach(atom => {
+                    const symbol = atom.atomData.symbol;
+                    atomCounts[symbol] = (atomCounts[symbol] || 0) + 1;
+                });
+
+                // Gerar fórmula (ordenar por convenção: C, H, depois alfabético)
+                const orderedSymbols = Object.keys(atomCounts).sort((a, b) => {
+                    if (a === 'C') return -1;
+                    if (b === 'C') return 1;
+                    if (a === 'H') return -1;
+                    if (b === 'H') return 1;
+                    return a.localeCompare(b);
+                });
+
+                const formula = orderedSymbols
+                    .map(symbol => {
+                        const count = atomCounts[symbol];
+                        return count === 1 ? symbol : `${symbol}${count}`;
+                    })
+                    .join('');
+
+                // Calcular posição central da molécula
+                const centerX = moleculeAtoms.reduce((sum, atom) => sum + atom.position.x, 0) / moleculeAtoms.length;
+                const centerY = moleculeAtoms.reduce((sum, atom) => sum + atom.position.y, 0) / moleculeAtoms.length;
+
+                molecules.push({
+                    atoms: moleculeAtoms,
+                    formula,
+                    atomCounts,
+                    centerPosition: { x: centerX, y: centerY }
+                });
+            }
+        });
+
+        return molecules;
+    }, [state.atoms, state.bonds]);
+
     // Limpar toda a estrutura molecular
     const clearMolecule = useCallback(() => {
         setState({
@@ -239,6 +335,7 @@ export const useMoleculeBuilder = () => {
 
         // Funções utilitárias
         calculateMolecularFormula,
+        detectSeparateMolecules,
         areAtomsClose,
         findNearbyAtoms,
     };

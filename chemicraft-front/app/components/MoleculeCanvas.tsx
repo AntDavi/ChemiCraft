@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { useMoleculeBuilder } from '@/app/hooks/useMoleculeBuilder';
-import { getAtomData } from '@/lib/atomData';
+import { getAtomData, AtomData } from '@/lib/atomData';
 import Atom from './Atom';
+import BondLine from './BondLine';
+import MoleculeNameDisplay from './MoleculeNameDisplay';
+import ClearButton from './ClearButton';
 import { cn } from '@/libs/utils';
 
 interface MoleculeCanvasProps {
@@ -16,12 +19,24 @@ interface DragState {
     offset: { x: number; y: number };
 }
 
+interface FeedbackState {
+    isDropZoneActive: boolean;
+    showSuccessIndicator: boolean;
+    lastDropPosition: { x: number; y: number } | null;
+}
+
 const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
     const canvasRef = useRef<HTMLDivElement>(null);
     const [dragState, setDragState] = useState<DragState>({
         isDragging: false,
         draggedAtomId: null,
         offset: { x: 0, y: 0 }
+    });
+
+    const [feedbackState, setFeedbackState] = useState<FeedbackState>({
+        isDropZoneActive: false,
+        showSuccessIndicator: false,
+        lastDropPosition: null
     });
 
     const {
@@ -34,8 +49,14 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
         selectAtom,
         createBond,
         findNearbyAtoms,
-        areAtomsClose
+        detectSeparateMolecules,
+        clearMolecule
     } = useMoleculeBuilder();
+
+    // Detectar moléculas separadas (otimizado com useMemo)
+    const separateMolecules = useMemo(() => {
+        return detectSeparateMolecules();
+    }, [detectSeparateMolecules]);
 
     // Converter coordenadas do mouse para coordenadas do canvas
     const getCanvasCoordinates = useCallback((clientX: number, clientY: number) => {
@@ -61,12 +82,29 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
         const dropPosition = getCanvasCoordinates(e.clientX, e.clientY);
         const newAtomId = addAtom(atomData, dropPosition);
 
+        // Feedback visual de sucesso
+        setFeedbackState(prev => ({
+            ...prev,
+            isDropZoneActive: false,
+            showSuccessIndicator: true,
+            lastDropPosition: dropPosition
+        }));
+
+        // Remover indicador de sucesso após 1 segundo
+        setTimeout(() => {
+            setFeedbackState(prev => ({ ...prev, showSuccessIndicator: false }));
+        }, 1000);
+
         // Verificar se há átomos próximos para criar ligações automáticas
         const nearbyAtoms = findNearbyAtoms(dropPosition, 80);
         nearbyAtoms.forEach(nearbyAtom => {
             if (nearbyAtom.id !== newAtomId && nearbyAtom.availableValence > 0) {
-                // Tentar criar ligação simples
-                createBond(newAtomId, nearbyAtom.id, 'single');
+                // Tentar criar ligação tripla, dupla ou simples conforme valência
+                let bondType: 'single' | 'double' | 'triple' = 'single';
+                const minValence = Math.min(atomData.valence, nearbyAtom.availableValence);
+                if (minValence >= 3) bondType = 'triple';
+                else if (minValence >= 2) bondType = 'double';
+                createBond(newAtomId, nearbyAtom.id, bondType);
             }
         });
     }, [addAtom, findNearbyAtoms, createBond, getCanvasCoordinates]);
@@ -74,6 +112,14 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
     const handleDragOver = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'copy';
+
+        // Ativar zona de drop
+        setFeedbackState(prev => ({ ...prev, isDropZoneActive: true }));
+    }, []);
+
+    const handleDragLeave = useCallback(() => {
+        // Desativar zona de drop
+        setFeedbackState(prev => ({ ...prev, isDropZoneActive: false }));
     }, []);
 
     // Handle drag de átomos existentes no canvas
@@ -119,11 +165,22 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
         if (draggedAtom) {
             const nearbyAtoms = findNearbyAtoms(draggedAtom.position, 80);
             nearbyAtoms.forEach(nearbyAtom => {
+                // Verificar se não há ligação existente entre os átomos
+                const existingBond = bonds.find(bond =>
+                    (bond.atom1Id === dragState.draggedAtomId && bond.atom2Id === nearbyAtom.id) ||
+                    (bond.atom1Id === nearbyAtom.id && bond.atom2Id === dragState.draggedAtomId)
+                );
+
                 if (nearbyAtom.id !== dragState.draggedAtomId &&
                     nearbyAtom.availableValence > 0 &&
                     draggedAtom.availableValence > 0 &&
-                    !areAtomsClose(dragState.draggedAtomId!, nearbyAtom.id)) {
-                    createBond(dragState.draggedAtomId!, nearbyAtom.id, 'single');
+                    !existingBond) {
+                    // Tentar ligação tripla, dupla ou simples
+                    let bondType: 'single' | 'double' | 'triple' = 'single';
+                    const minValence = Math.min(draggedAtom.availableValence, nearbyAtom.availableValence);
+                    if (minValence >= 3) bondType = 'triple';
+                    else if (minValence === 2) bondType = 'double';
+                    createBond(dragState.draggedAtomId!, nearbyAtom.id, bondType);
                 }
             });
         }
@@ -133,7 +190,7 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
             draggedAtomId: null,
             offset: { x: 0, y: 0 }
         });
-    }, [dragState, atoms, findNearbyAtoms, createBond, areAtomsClose]);
+    }, [dragState, atoms, bonds, findNearbyAtoms, createBond]);
 
     // Handle double click para remover átomo
     const handleAtomDoubleClick = useCallback((atomId: string) => {
@@ -154,19 +211,14 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
 
         if (!atom1 || !atom2) return null;
 
-        const strokeWidth = bond.type === 'single' ? 2 : bond.type === 'double' ? 4 : 6;
-        const strokeColor = '#374151';
-
         return (
-            <line
+            <BondLine
                 key={bond.id}
-                x1={atom1.position.x + 24} // Offset para centro do átomo (size/2)
+                x1={atom1.position.x + 24}
                 y1={atom1.position.y + 24}
                 x2={atom2.position.x + 24}
                 y2={atom2.position.y + 24}
-                stroke={strokeColor}
-                strokeWidth={strokeWidth}
-                strokeLinecap="round"
+                type={bond.type}
             />
         );
     }, [atoms]);
@@ -175,17 +227,26 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
         <div
             ref={canvasRef}
             className={cn(
-                "relative w-full h-screen min-h-[500px] bg-gray-50 border-2 border-dashed border-gray-300",
-                "transition-colors duration-200",
-                "hover:border-gray-400 hover:bg-gray-100",
+                "relative w-full min-h-[500px] bg-gray-50 border-2 border-dashed border-gray-300",
+                "transition-all duration-200",
+                feedbackState.isDropZoneActive ? "border-blue-400 bg-blue-50 border-solid" : "hover:border-gray-400 hover:bg-gray-100",
                 className
             )}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onClick={handleCanvasClick}
         >
+            {/* Botão de limpar */}
+            <div className="absolute top-4 left-4 z-20">
+                <ClearButton
+                    onClear={clearMolecule}
+                    disabled={atoms.length === 0}
+                />
+            </div>
+
             {/* SVG para renderizar ligações */}
             {bonds.length > 0 && (
                 <svg
@@ -229,6 +290,28 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
                 </div>
             ))}
 
+            {/* Display das fórmulas moleculares separadas */}
+            {separateMolecules.map((molecule: {
+                atoms: Array<{ id: string; atomData: AtomData; position: { x: number; y: number } }>,
+                formula: string,
+                atomCounts: Record<string, number>,
+                centerPosition: { x: number, y: number }
+            }, index: number) => (
+                <div
+                    key={`molecule-${index}`}
+                    className="absolute z-20"
+                    style={{
+                        left: molecule.centerPosition.x - 50, // Centralizar aproximadamente
+                        top: molecule.centerPosition.y - 80, // Posicionar acima dos átomos
+                    }}
+                >
+                    <MoleculeNameDisplay
+                        formula={molecule.formula}
+                        atomCounts={molecule.atomCounts}
+                    />
+                </div>
+            ))}
+
             {/* Indicador de área de drop */}
             {atoms.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -240,11 +323,35 @@ const MoleculeCanvas: React.FC<MoleculeCanvasProps> = ({ className }) => {
                 </div>
             )}
 
+            {/* Indicador de sucesso no drop */}
+            {feedbackState.showSuccessIndicator && feedbackState.lastDropPosition && (
+                <div
+                    className="absolute z-30 pointer-events-none animate-ping"
+                    style={{
+                        left: feedbackState.lastDropPosition.x - 10,
+                        top: feedbackState.lastDropPosition.y - 10,
+                    }}
+                >
+                    <div className="w-5 h-5 bg-green-400 rounded-full opacity-75"></div>
+                </div>
+            )}
+
+            {/* Indicador de zona de drop ativa */}
+            {feedbackState.isDropZoneActive && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-5">
+                    <div className="text-blue-600 text-center animate-bounce">
+                        <div className="text-3xl mb-2">⬇️</div>
+                        <div className="text-xl font-semibold">Solte o átomo aqui!</div>
+                    </div>
+                </div>
+            )}
+
             {/* Informações de debug (opcional) */}
             {process.env.NODE_ENV === 'development' && (
-                <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
                     <div>Átomos: {atoms.length}</div>
                     <div>Ligações: {bonds.length}</div>
+                    <div>Moléculas: {separateMolecules.length}</div>
                     {selectedAtomId && <div>Selecionado: {selectedAtomId}</div>}
                 </div>
             )}

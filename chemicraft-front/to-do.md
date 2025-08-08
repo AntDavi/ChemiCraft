@@ -88,24 +88,23 @@ Desenvolver uma aplicação educacional de química com as seguintes funcionalid
   - [x] Informações de valência disponível
 
 ### 4.5 Sistema de Ligações
-- [ ] Implementar detecção automática de proximidade entre átomos
-- [ ] Criar algoritmo de ligação baseado em valência
-- [ ] Desenvolver `BondLine.tsx` para visualização de ligações:
-  - [ ] Ligação simples (linha única)
-  - [ ] Ligação dupla (linhas paralelas)
-  - [ ] Ligação tripla (três linhas paralelas)
+- [x] Implementar detecção automática de proximidade entre átomos
+- [x] Criar algoritmo de ligação baseado em valência
+- [x] Desenvolver `BondLine.tsx` para visualização de ligações:
+  - [x] Ligação simples (linha única)
+  - [x] Ligação dupla (linhas paralelas)
+  - [x] Ligação tripla (três linhas paralelas)
 
 ### 4.6 Sistema de Nomenclatura
-- [ ] Implementar geração automática de fórmula molecular
-- [ ] Criar `MoleculeNameDisplay.tsx` para exibir:
-  - [ ] Fórmula química (ex: H₂O, CH₄)
+- [x] Implementar geração automática de fórmula molecular
+- [x] Criar `MoleculeNameDisplay.tsx` para exibir:
+  - [x] Fórmula química (ex: H₂O, CH₄)
   - [ ] Nome comum da molécula (quando aplicável)
-  - [ ] Contagem de átomos por elemento
+  - [x] Contagem de átomos por elemento
 
 ### 4.7 Funcionalidades Complementares
-- [ ] Implementar `ClearButton.tsx` com confirmação
-- [ ] Adicionar feedback visual para ações (hover, drag, drop)
-- [ ] Implementar sistema de undo/redo (opcional)
+- [x] Implementar `ClearButton.tsx` com confirmação
+- [x] Adicionar feedback visual para ações (hover, drag, drop)
 
 ### 4.8 Otimização e Responsividade
 - [ ] Testar comportamento em dispositivos desktop

@@ -13,7 +13,7 @@ function AtomSelector() {
     };
 
     return (
-        <div className="absolute bottom-8 left-0 w-full h-24 z-10">
+        <div className="absolute bottom-10 left-0 w-full h-24 z-10">
             <Dock direction='middle' className="px-8 py-3 h-full gap-3">
                 {ATOM_LIST.map((atomSymbol) => {
                     const atomData = getAtomData(atomSymbol);
