@@ -3,16 +3,17 @@ import { MoleculeCanvas } from "./components/MoleculeCanvas";
 
 export default function Home() {
   return (
-    <main className="container mx-auto">
-      <header>
-        <h2>Chemicraft</h2>
-        <p>Crie moléculas de forma simples e rápida.</p>
+    <main className="relative min-h-screen w-full bg-background">
+      <header className="text-center py-6">
+        <h2 className="text-2xl font-bold">Chemicraft</h2>
+        <p className="text-base text-muted-foreground">Crie moléculas de forma simples e rápida.</p>
       </header>
 
-      <section>
+      <div className="relative flex flex-col items-center justify-center w-full h-[calc(100vh-120px)] px-4 pb-24">
         <MoleculeCanvas />
-        <AtomSelector />
-      </section>
+      </div>
+
+      <AtomSelector />
     </main>
   );
 }
