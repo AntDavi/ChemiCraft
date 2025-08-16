@@ -1,6 +1,6 @@
 "use client";
 
-import { mockAtoms } from "../lib/chemistry/atoms";
+import { mockAtoms } from "../_lib/chemistry/atoms";
 import { Atom } from "./Atom";
 
 export function AtomSelector() {
