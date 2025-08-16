@@ -1,10 +1,18 @@
+"use client";
+
+import { useRef } from "react";
 import { AtomSelector } from "./_components/AtomSelector";
 import { ClearBtn } from "./_components/ClearBtn";
-import { MoleculeCanvas } from "./_components/MoleculeCanvas";
-
+import { MoleculeCanvas, MoleculeCanvasRef } from "./_components/MoleculeCanvas";
 import { CounterCard } from "./_components/CounterCard";
 
 export default function Home() {
+  const canvasRef = useRef<MoleculeCanvasRef>(null);
+
+  const handleClearCanvas = () => {
+    canvasRef.current?.clearCanvas();
+  };
+
   return (
     <main className="relative min-h-screen w-full bg-background">
 
@@ -15,13 +23,13 @@ export default function Home() {
             <h2 className="text-2xl font-bold">Chemicraft</h2>
             <p className="text-base text-muted-foreground">Crie moléculas de forma simples e rápida.</p>
           </div>
-          <ClearBtn />
+          <ClearBtn onClear={handleClearCanvas} />
         </div>
         <CounterCard atoms={6} bonds={5} molecules={2} />
       </header>
 
       <div className="relative flex flex-col items-center justify-center">
-        <MoleculeCanvas />
+        <MoleculeCanvas ref={canvasRef} />
         <AtomSelector />
       </div>
 

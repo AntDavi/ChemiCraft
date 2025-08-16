@@ -1,9 +1,13 @@
 'use client'
 
-import { useState, useCallback } from 'react';
-import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, EdgeChange, NodeChange, Background } from '@xyflow/react';
+import { useState, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, EdgeChange, NodeChange, Background, BackgroundVariant } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import type { Connection } from '@xyflow/react';
+
+export interface MoleculeCanvasRef {
+    clearCanvas: () => void;
+}
 
 
 const initialNodes = [
@@ -12,9 +16,18 @@ const initialNodes = [
 ];
 const initialEdges = [{ id: 'n1-n2', source: 'n1', target: 'n2' }];
 
-export function MoleculeCanvas() {
+export const MoleculeCanvas = forwardRef<MoleculeCanvasRef>((props, ref) => {
     const [nodes, setNodes] = useState(initialNodes);
     const [edges, setEdges] = useState(initialEdges);
+
+    const clearCanvas = useCallback(() => {
+        setNodes([]);
+        setEdges([]);
+    }, []);
+
+    useImperativeHandle(ref, () => ({
+        clearCanvas
+    }), [clearCanvas]);
 
     const onNodesChange = useCallback(
         (changes: NodeChange<{ id: string; position: { x: number; y: number; }; data: { label: string; }; }>[]) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
@@ -41,8 +54,10 @@ export function MoleculeCanvas() {
                 onConnect={onConnect}
                 fitView
             >
-                <Background variant="dots" gap={12} size={1} />
+                <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
             </ReactFlow>
         </div>
     );
-}
+});
+
+MoleculeCanvas.displayName = 'MoleculeCanvas';
